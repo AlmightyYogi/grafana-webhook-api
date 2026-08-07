@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Header, HTTPException, Depends
 from app.models import GrafanaWebhookPayload
 from app.database import get_connection
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import uuid
 
@@ -31,13 +31,31 @@ def verify_api_key(x_api_key: str = Header(...)):
         raise HTTPException(status_code=403, detail="API key tidak valid")
     return x_api_key
 
-def parse_grafana_datetime(starts_at: str):
+def parse_grafana_datetime(starts_at: str, subtract_minutes: int = 0):
+    """
+    Parse waktu dari Grafana alert dengan opsi pengurangan menit.
+    
+    Args:
+        starts_at: Waktu dari alert.startsAt (format ISO 8601)
+        subtract_minutes: Jumlah menit yang dikurangi (default 0)
+    
+    Returns:
+        tuple: (date, time) format "%Y-%m-%d", "%H:%M"
+    """
     try:
         dt_clean = starts_at[:19]
         dt = datetime.strptime(dt_clean, "%Y-%m-%dT%H:%M:%S")
+        
+        if subtract_minutes > 0:
+            dt = dt - timedelta(minutes=subtract_minutes)
+        
         return dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M")
-    except Exception:
+    
+    except (ValueError, IndexError, TypeError):
+        # Fallback jika parsing gagal
         now = datetime.now()
+        if subtract_minutes > 0:
+            now = now - timedelta(minutes=subtract_minutes)
         return now.strftime("%Y-%m-%d"), now.strftime("%H:%M")
 
 def generate_incident_code(cursor, report_type: str) -> str:
@@ -101,7 +119,10 @@ def receive_grafana_webhook(payload: GrafanaWebhookPayload):
                 or "No description"
             )
 
-            request_date, report_time = parse_grafana_datetime(alert.startsAt or "")
+            request_date, report_time = parse_grafana_datetime(
+                alert.startsAt or "",
+                subtract_minutes=0 
+            )
 
             with conn.cursor() as cursor:
 
