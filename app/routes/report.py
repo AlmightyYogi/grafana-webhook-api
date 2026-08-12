@@ -3,6 +3,7 @@ from app.models import GrafanaWebhookPayload
 from app.database import get_connection
 from datetime import datetime, timedelta
 import os
+import psycopg2.extras
 import uuid
 
 router = APIRouter()
@@ -124,7 +125,7 @@ def receive_grafana_webhook(payload: GrafanaWebhookPayload):
                 subtract_minutes=0 
             )
 
-            with conn.cursor() as cursor:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
 
                 incident_code = generate_incident_code(cursor, HARDCODED["type"])
                 now           = datetime.now()

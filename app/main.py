@@ -29,7 +29,7 @@ async def startup_event():
         print(f"✓ API Key loaded: {'Yes' if os.getenv('API_KEY') else 'NO - WARNING: API_KEY not set'}")
     else:
         print(f"✗ Database connection FAILED: {message}")
-        print("  Pastikan MySQL XAMPP sudah running dan konfigurasi .env sudah benar")
+        print("  Pastikan PostgreSQL sudah running dan konfigurasi .env sudah benar")
 
 app.include_router(report_router, prefix="/api")
 

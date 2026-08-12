@@ -1,19 +1,17 @@
-import pymysql
+import psycopg2
+import psycopg2.extras
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def get_connection():
-    return pymysql.connect(
+    return psycopg2.connect(
         host=os.getenv("DB_HOST", "127.0.0.1"),
-        port=int(os.getenv("DB_PORT", 3306)),
-        user=os.getenv("DB_USER", "root"),
+        port=int(os.getenv("DB_PORT", 5432)),
+        user=os.getenv("DB_USER", "itops"),
         password=os.getenv("DB_PASSWORD", ""),
-        database=os.getenv("DB_NAME"),
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-        autocommit=False
+        dbname=os.getenv("DB_NAME", "management_system"),
     )
 
 def test_connection():
